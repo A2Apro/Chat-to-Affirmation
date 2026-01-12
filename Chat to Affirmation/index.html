@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Affirmations</title>
+    <title>Spiritual Nourishment</title>
     <style>
         /* The "Tisane" Color Palette */
         :root {
@@ -28,7 +28,7 @@
             padding: 2.5rem; 
             border-radius: 16px; 
             box-shadow: 0 8px 20px rgba(44, 44, 44, 0.05); 
-            border: 1px solid rgba(85, 107, 47, 0.1); /* Subtle green border */
+            border: 1px solid rgba(85, 107, 47, 0.1); 
             text-align: center;
         }
 
@@ -36,13 +36,15 @@
             color: var(--accent-green); 
             font-family: 'Georgia', serif; 
             margin-bottom: 0.5rem;
+            font-size: 2rem;
         }
 
         p.subtitle { 
-            font-size: 0.9rem; 
+            font-size: 1rem; 
             opacity: 0.8; 
             margin-bottom: 2rem; 
             font-style: italic;
+            color: var(--accent-fire); /* A little pop of color for the slogan */
         }
 
         label {
@@ -55,8 +57,8 @@
             color: var(--text-main);
         }
 
-        /* Styling for the Belief Input */
-        input[type="text"] { 
+        /* ONE STYLE FOR ALL TEXT AREAS */
+        textarea {
             width: 100%; 
             padding: 12px; 
             box-sizing: border-box;
@@ -64,26 +66,9 @@
             border-radius: 8px; 
             font-size: 1rem;
             background: #FAFAFA;
-            transition: border 0.3s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent-green);
-        }
-
-        /* Styling for the Topic Textarea */
-        textarea {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            border: 2px solid #E0E0E0;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: #FAFAFA;
             font-family: inherit;
-            resize: vertical;     /* Allows user to make it taller */
-            min-height: 100px;    /* Starts comfortably tall */
+            resize: vertical;
+            min-height: 80px;  /* Good starting height */
             transition: border 0.3s;
         }
 
@@ -120,22 +105,22 @@
             color: var(--text-main); 
             min-height: 50px;
             padding: 10px;
-            white-space: pre-wrap; /* Preserves formatting */
+            white-space: pre-wrap; 
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>Daily Affirmations</h1>
+        <h1>Spiritual Nourishment</h1>
         <p class="subtitle">Embrace your mind, body, and spirit.</p>
 
-        <label for="belief">1. My Tradition or Belief System</label>
-        <input type="text" id="belief" placeholder="e.g. Catholic, Stoic, Nature, Secular">
+        <label for="belief">1. My Belief System</label>
+        <textarea id="belief" placeholder="e.g. My belief system is metaphysics and the understanding of energy, and I also find peace in nature..."></textarea>
         
         <label for="topic">2. I need support with...</label>
         <textarea id="topic" placeholder="e.g. I'm feeling really anxious about my new job because I feel like I'm not qualified enough..."></textarea>
         
-        <button onclick="getAffirmation()">Generate Affirmation</button>
+        <button onclick="getAffirmation()">Receive Nourishment</button>
         
         <div id="result"></div>
     </div>
