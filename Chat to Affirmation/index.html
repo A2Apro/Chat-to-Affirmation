@@ -3,155 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spiritual Nourishment</title>
-    <style>
-        /* The "Tisane" Color Palette */
-        :root {
-            --bg-color: #F2EFE9;      /* Warm Cream/Beige */
-            --card-bg: #FFFDF8;       /* Softer White */
-            --text-main: #2C2C2C;     /* Charcoal / Deep Brown */
-            --accent-green: #556B2F;  /* Olive Green (Leaves) */
-            --accent-fire: #E36414;   /* Warm Orange (Fire) */
-        }
-
-        body { 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            padding: 2rem; 
-            max-width: 500px; 
-            margin: 0 auto; 
-            background-color: var(--bg-color);
-            color: var(--text-main);
-        }
-
-        .card { 
-            background: var(--card-bg); 
-            padding: 2.5rem; 
-            border-radius: 16px; 
-            box-shadow: 0 8px 20px rgba(44, 44, 44, 0.05); 
-            border: 1px solid rgba(85, 107, 47, 0.1); 
-            text-align: center;
-        }
-
-        h1 { 
-            color: var(--accent-green); 
-            font-family: 'Georgia', serif; 
-            margin-bottom: 0.5rem;
-            font-size: 2rem;
-        }
-
-        p.subtitle { 
-            font-size: 1rem; 
-            opacity: 0.8; 
-            margin-bottom: 2rem; 
-            font-style: italic;
-            color: var(--accent-fire); /* A little pop of color for the slogan */
-        }
-
-        label {
-            display: block;
-            text-align: left;
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-main);
-        }
-
-        /* ONE STYLE FOR ALL TEXT AREAS */
-        textarea {
-            width: 100%; 
-            padding: 12px; 
-            box-sizing: border-box;
-            border: 2px solid #E0E0E0; 
-            border-radius: 8px; 
-            font-size: 1rem;
-            background: #FAFAFA;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 80px;  /* Good starting height */
-            transition: border 0.3s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent-green);
-        }
-
-        button { 
-            background: var(--accent-fire); 
-            color: white; 
-            border: none; 
-            padding: 14px 20px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 2rem;
-            box-shadow: 0 4px 10px rgba(227, 100, 20, 0.2);
-            transition: transform 0.2s;
-        }
-
-        button:hover { 
-            transform: translateY(-2px);
-            background: #d65a10; 
-        }
-
-        #result { 
-            margin-top: 30px; 
-            font-size: 1.3rem; 
-            line-height: 1.6;
-            font-family: 'Georgia', serif;
-            color: var(--text-main); 
-            min-height: 50px;
-            padding: 10px;
-            white-space: pre-wrap; 
-        }
-    </style>
+    <title>Affirmation Agent</title>
 </head>
 <body>
-    <div class="card">
-        <h1>Spiritual Nourishment</h1>
-        <p class="subtitle">Embrace your mind, body, and spirit.</p>
+    <h1>Affirmation Generator</h1>
+    
+    <input type="text" id="topic" placeholder="What's bothering you?">
+    <input type="text" id="belief" placeholder="Your belief system?">
+    <button id="generateBtn">Get Affirmation</button>
+    
+    <p id="output"></p>
 
-        <label for="belief">1. My Belief System</label>
-        <textarea id="belief" placeholder="e.g. My belief system is metaphysics and the understanding of energy, and I also find peace in nature..."></textarea>
-        
-        <label for="topic">2. I need support with...</label>
-        <textarea id="topic" placeholder="e.g. I'm feeling really anxious about my new job because I feel like I'm not qualified enough..."></textarea>
-        
-        <button onclick="getAffirmation()">Receive Nourishment</button>
-        
-        <div id="result"></div>
-    </div>
+    <script type="module">
+        import { runAgent } from './agent.js';
 
-    <script>
-        async function getAffirmation() {
+        document.getElementById('generateBtn').addEventListener('click', async () => {
             const topic = document.getElementById('topic').value;
             const belief = document.getElementById('belief').value;
-            const resultDiv = document.getElementById('result');
+            const outputBox = document.getElementById('output');
             
-            // Simple loading state
-            resultDiv.innerHTML = "<span style='color: #888;'>✨ Connecting to wisdom...</span>";
+            outputBox.innerText = "Generating...";
             
-            try {
-                const response = await fetch('/.netlify/functions/agent', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic: topic, belief: belief })
-                });
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    resultDiv.innerText = "Error: " + data.error;
-                } else {
-                    resultDiv.innerText = data.affirmation;
-                }
-            } catch (error) {
-                resultDiv.innerText = "Could not reach the agent. Are you online?";
-            }
-        }
+            // Call the function from agent.js
+            const result = await runAgent(topic, belief);
+            
+            outputBox.innerText = result;
+        });
     </script>
 </body>
 </html>
