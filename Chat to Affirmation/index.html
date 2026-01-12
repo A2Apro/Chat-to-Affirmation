@@ -4,19 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Affirmation Agent</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+        #output { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; min-height: 50px; }
+    </style>
 </head>
 <body>
     <h1>Affirmation Generator</h1>
     
-    <input type="text" id="topic" placeholder="What's bothering you?">
-    <input type="text" id="belief" placeholder="Your belief system?">
+    <label>What's on your mind?</label>
+    <input type="text" id="topic" placeholder="e.g., Job anxiety, Feeling lost">
+    
+    <label>Your Belief System?</label>
+    <input type="text" id="belief" placeholder="e.g., Christian, Buddhist, Scientific, General Spiritual">
+    
     <button id="generateBtn">Get Affirmation</button>
     
-    <p id="output"></p>
+    <div id="output">Your affirmation will appear here...</div>
 
-    <script type="module">
-        import { runAgent } from './agent.js';
-
+    <script>
         document.getElementById('generateBtn').addEventListener('click', async () => {
             const topic = document.getElementById('topic').value;
             const belief = document.getElementById('belief').value;
@@ -24,10 +31,25 @@
             
             outputBox.innerText = "Generating...";
             
-            // Call the function from agent.js
-            const result = await runAgent(topic, belief);
-            
-            outputBox.innerText = result;
+            try {
+                // THIS LINE CONNECTS TO YOUR BACKEND AGENT
+                const response = await fetch('/.netlify/functions/agent', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, belief })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                outputBox.innerText = data.affirmation;
+
+            } catch (error) {
+                console.error("Error:", error);
+                outputBox.innerText = "Error: Could not reach the agent. Check console.";
+            }
         });
     </script>
 </body>
