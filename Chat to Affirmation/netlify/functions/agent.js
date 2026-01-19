@@ -30,7 +30,7 @@ exports.handler = async (event) => {
   try {
     // 4. Setup the AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     // 5. Parse the incoming data
     const requestBody = JSON.parse(event.body);
