@@ -1,7 +1,6 @@
 const https = require('https');
 
 exports.handler = async (event) => {
-  // 1. Setup CORS
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -13,19 +12,13 @@ exports.handler = async (event) => {
   }
 
   return new Promise((resolve, reject) => {
-    // 2. DIAGNOSTIC: List all available models
-    // We are NOT generating text. We are asking "What works?"
+    // 1. Get the API Key
     const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : "";
-    
-    // Check if key is missing before we even start
-    if (!apiKey) {
-      resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "API Key is Missing in Netlify!" }) });
-      return;
-    }
 
+    // 2. Ask Google for the list of models
     const options = {
       hostname: 'generativelanguage.googleapis.com',
-      path: `/v1beta/models?key=${apiKey}`, // <--- This asks for the list
+      path: `/v1beta/models?key=${apiKey}`,
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     };
@@ -35,34 +28,30 @@ exports.handler = async (event) => {
       res.on('data', (chunk) => { responseBody += chunk; });
       res.on('end', () => {
         if (res.statusCode === 200) {
-          // SUCCESS: Google talked back! Let's see the list.
+          const data = JSON.parse(responseBody);
+          // 3. THIS IS THE CHANGE: Send the list back as the "affirmation"
+          // so you can see it on your screen.
+          const modelList = data.models.map(m => m.name).join(", ");
+          
           resolve({
             statusCode: 200,
             headers,
-            body: JSON.stringify({ 
-              message: "Connection Successful!", 
-              models: JSON.parse(responseBody) 
-            })
+            body: JSON.stringify({ affirmation: "MODELS FOUND: " + modelList })
           });
         } else {
-          // FAILURE: Google rejected the key or the URL.
           resolve({ 
             statusCode: res.statusCode, 
             headers, 
-            body: JSON.stringify({ 
-              error: "Google Connection Failed", 
-              status: res.statusCode,
-              details: responseBody 
-            }) 
+            body: JSON.stringify({ affirmation: "Error: " + responseBody }) 
           });
         }
       });
     });
-
+    
     req.on('error', (e) => {
-      resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Network Error", message: e.message }) });
+      resolve({ statusCode: 500, headers, body: JSON.stringify({ affirmation: "Network Error: " + e.message }) });
     });
-
+    
     req.end();
   });
 };
