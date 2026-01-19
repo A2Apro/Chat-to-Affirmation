@@ -1,12 +1,10 @@
 [build]
-  # This tells Netlify where your files are
   base = "Chat to Affirmation"
   publish = "."
-  command = "npm install && npm run build" 
-  # ^ The echo command above forces Netlify to see a "change"
+  command = "npm install && npm run build"
+  ignore = "false"  
+  # ^ THIS IS THE MAGIC KEY. It forces Netlify to never skip.
 
 [functions]
-  # This fixes the "Agent Not Found" error by pointing to the right sub-folder
   directory = "netlify/functions"
   node_bundler = "esbuild"
-
