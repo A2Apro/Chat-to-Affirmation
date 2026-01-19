@@ -1,6 +1,6 @@
 {
   "name": "ai-agent",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.21.0"
