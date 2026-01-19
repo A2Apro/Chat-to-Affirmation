@@ -1,65 +1,75 @@
-// Remove the library import since we are doing it manually
-// const { GoogleGenerativeAI } = require("@google/generative-ai"); 
+const https = require('https');
 
 exports.handler = async (event) => {
-  // 1. SETUP CORS (The Permission Slips)
+  // 1. Setup CORS
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS"
   };
 
-  // 2. Handle the "Can I talk to you?" check
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers, body: "OK" };
   }
 
-  try {
-    // 3. Parse the user's data
-    const requestBody = JSON.parse(event.body);
-    const topic = requestBody.topic || "general";
-    const belief = requestBody.belief || "neutral";
-    
-    // 4. Construct the Prompt
-    const promptText = `Act as an empathetic coach. Topic: ${topic}. Beliefs: ${belief}. Write a short affirmation.`;
+  return new Promise((resolve, reject) => {
+    try {
+      // 2. Parse Data
+      const body = JSON.parse(event.body);
+      const topic = body.topic || "general";
+      const belief = body.belief || "neutral";
+      
+      const prompt = `Act as an empathetic coach. Topic: ${topic}. Beliefs: ${belief}. Write a short affirmation.`;
+      
+      // 3. Prepare the data for Google
+      const data = JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      });
 
-    // 5. THE MANUAL OVERRIDE: Direct Fetch to Google
-    // We type the URL manually so it CANNOT be wrong.
-    const apiKey = process.env.GEMINI_API_KEY;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      // 4. Configure the request (Standard 'gemini-1.5-flash')
+      const options = {
+        hostname: 'generativelanguage.googleapis.com',
+        path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': data.length
+        }
+      };
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: promptText }]
-        }]
-      })
-    });
+      // 5. Send the request (Native Node.js)
+      const req = https.request(options, (res) => {
+        let responseBody = '';
+        res.on('data', (chunk) => { responseBody += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              const parsed = JSON.parse(responseBody);
+              const text = parsed.candidates[0].content.parts[0].text;
+              resolve({
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ affirmation: text })
+              });
+            } catch (e) {
+              resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parse Error", details: responseBody }) });
+            }
+          } else {
+            // This will show us the REAL error from Google (e.g., Key Invalid)
+            resolve({ statusCode: res.statusCode, headers, body: JSON.stringify({ error: "Google API Error", details: responseBody }) });
+          }
+        });
+      });
 
-    // 6. Check if Google is happy
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Google API Error: ${errorText}`);
+      req.on('error', (e) => {
+        resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Network Error", message: e.message }) });
+      });
+
+      req.write(data);
+      req.end();
+
+    } catch (e) {
+      resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Code Error", message: e.message }) });
     }
-
-    // 7. Extract the answer manually
-    const data = await response.json();
-    const affirmation = data.candidates[0].content.parts[0].text;
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ affirmation: affirmation }),
-    };
-
-  } catch (error) {
-    console.error("Manual Override Error:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message })
-    };
-  }
+  });
 };
