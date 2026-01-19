@@ -7,7 +7,14 @@
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
         input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-        #output { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; min-height: 50px; }
+        #output { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #f0f0f0; 
+            border-radius: 5px; 
+            min-height: 50px; 
+            white-space: pre-wrap; /* Ensures the AI text formats nicely */
+        }
     </style>
 </head>
 <body>
@@ -29,26 +36,33 @@
             const belief = document.getElementById('belief').value;
             const outputBox = document.getElementById('output');
             
+            // Show loading state
             outputBox.innerText = "Generating...";
             
             try {
-                // THIS LINE CONNECTS TO YOUR BACKEND AGENT
-                const response = await fetch('/.netlify/functions/agent', { 
+                /* UPDATE: Added './' before '.netlify'. 
+                   This tells the browser to look inside the 'Chat to Affirmation' folder 
+                   instead of the website root.
+                */
+                const response = await fetch('./.netlify/functions/agent', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ topic, belief })
                 });
 
                 if (!response.ok) {
+                    // This will catch 404 (Not Found) or 500 (Server Error)
                     throw new Error(`Server Error: ${response.status}`);
                 }
 
                 const data = await response.json();
+                
+                // Display the affirmation sent back by your agent.js
                 outputBox.innerText = data.affirmation;
 
             } catch (error) {
-                console.error("Error:", error);
-                outputBox.innerText = "Error: Could not reach the agent. Check console.";
+                console.error("Error details:", error);
+                outputBox.innerText = "Error: " + error.message + ". Check the browser console and Netlify function logs.";
             }
         });
     </script>
