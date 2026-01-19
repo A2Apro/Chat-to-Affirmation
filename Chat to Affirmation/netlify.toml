@@ -1,0 +1,9 @@
+[build]
+  # IMPORTANT: Make sure this matches your folder name exactly!
+  base = "Chat to Affirmation"
+  publish = "."
+
+[functions]
+  # This tells Netlify where your 'agent.js' lives
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
