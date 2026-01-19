@@ -1,7 +1,6 @@
 const https = require('https');
 
 exports.handler = async (event) => {
-  // 1. Setup CORS (The Permission Slips)
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -12,65 +11,61 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers, body: "OK" };
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     try {
-      // 2. Parse the user's data
       const body = JSON.parse(event.body);
       const topic = body.topic || "general";
       const belief = body.belief || "neutral";
       
-      const prompt = `Act as an empathetic coach. Topic: ${topic}. Beliefs: ${belief}. Write a short, powerful affirmation.`;
+      const prompt = `Act as an empathetic coach. Topic: ${topic}. Beliefs: ${belief}. Write a short affirmation.`;
       
-      // 3. Prepare the data for Google
       const data = JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }]
       });
 
-      // 4. Configure the request
-      // WE ARE USING YOUR MODEL: gemini-2.0-flash
+      // We use 'gemini-1.5-flash' because it is the most standard Free Tier model
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        path: `/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Content-Length': data.length
+          'Content-Length': Buffer.byteLength(data) // FIX: Ensures exact byte count
         }
       };
 
-      // 5. Send the request
       const req = https.request(options, (res) => {
         let responseBody = '';
         res.on('data', (chunk) => { responseBody += chunk; });
         res.on('end', () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              const parsed = JSON.parse(responseBody);
-              // Extract the text safely
-              const text = parsed.candidates[0].content.parts[0].text;
-              resolve({
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ affirmation: text })
-              });
-            } catch (e) {
-              resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parse Error", details: responseBody }) });
-            }
+            // Success!
+            const parsed = JSON.parse(responseBody);
+            const text = parsed.candidates[0].content.parts[0].text;
+            resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: text }) });
           } else {
-            resolve({ statusCode: res.statusCode, headers, body: JSON.stringify({ error: "Google Error", details: responseBody }) });
+            // FAILURE: But we send it as "Success" (200) so you can see the error on your screen
+            console.log("Google Error:", responseBody); // Prints to Netlify Log
+            resolve({ 
+              statusCode: 200, // <--- FAKE SUCCESS so the website displays the text
+              headers, 
+              body: JSON.stringify({ affirmation: "GOOGLE ERROR: " + responseBody }) 
+            });
           }
         });
       });
 
       req.on('error', (e) => {
-        resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Network Error", message: e.message }) });
+        console.log("Network Error:", e.message);
+        resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "NETWORK ERROR: " + e.message }) });
       });
 
       req.write(data);
       req.end();
 
     } catch (e) {
-      resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Code Error", message: e.message }) });
+      console.log("Code Error:", e.message);
+      resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "CODE ERROR: " + e.message }) });
     }
   });
 };
