@@ -1,68 +1,65 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// Remove the library import since we are doing it manually
+// const { GoogleGenerativeAI } = require("@google/generative-ai"); 
 
 exports.handler = async (event) => {
-  // 1. DEFINE HEADERS: This is the "Permission Slip" needed for CORS
+  // 1. SETUP CORS (The Permission Slips)
   const headers = {
-    "Access-Control-Allow-Origin": "*",       // Allow requests from any website
+    "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS"
   };
 
-  // 2. HANDLE PRE-FLIGHT: Browsers ask "Can I send data?" before actually doing it.
-  // We must say "Yes" (200 OK) to this "OPTIONS" request.
+  // 2. Handle the "Can I talk to you?" check
   if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers,
-      body: "OK"
-    };
-  }
-
-  // 3. Security Check: Only allow POST requests for the actual data
-  if (event.httpMethod !== "POST") {
-    return { 
-      statusCode: 405, 
-      headers, // Attach headers here too
-      body: "Method Not Allowed" 
-    };
+    return { statusCode: 200, headers, body: "OK" };
   }
 
   try {
-    // 4. Setup the AI
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // 5. Parse the incoming data
+    // 3. Parse the user's data
     const requestBody = JSON.parse(event.body);
-    const userTopic = requestBody.topic || "general";
-    const userBelief = requestBody.belief || "neutral";
+    const topic = requestBody.topic || "general";
+    const belief = requestBody.belief || "neutral";
+    
+    // 4. Construct the Prompt
+    const promptText = `Act as an empathetic coach. Topic: ${topic}. Beliefs: ${belief}. Write a short affirmation.`;
 
-    // 6. The Prompt Logic
-    const prompt = `
-      Act as an empathetic coach.
-      User Challenge: "${userTopic}"
-      User Belief System: "${userBelief}"
-      Generate a short, powerful affirmation.
-    `;
+    // 5. THE MANUAL OVERRIDE: Direct Fetch to Google
+    // We type the URL manually so it CANNOT be wrong.
+    const apiKey = process.env.GEMINI_API_KEY;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    // 7. Generate Content
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = result.response.text(); 
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: promptText }]
+        }]
+      })
+    });
 
-    // 8. Send success response back to the browser
+    // 6. Check if Google is happy
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Google API Error: ${errorText}`);
+    }
+
+    // 7. Extract the answer manually
+    const data = await response.json();
+    const affirmation = data.candidates[0].content.parts[0].text;
+
     return {
       statusCode: 200,
-      headers, // <--- Attach headers to the success message
-      body: JSON.stringify({ affirmation: text }),
+      headers,
+      body: JSON.stringify({ affirmation: affirmation }),
     };
 
   } catch (error) {
-    console.error("Agent Error:", error);
-    return { 
-      statusCode: 500, 
-      headers, // <--- Attach headers to the error message so you can see it in browser
-      body: JSON.stringify({ error: error.message }) 
+    console.error("Manual Override Error:", error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
