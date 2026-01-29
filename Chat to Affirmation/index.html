@@ -4,116 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tisane Infusions - Affirmation Agent</title>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
 
         body {
-            background-color: #F2EADC; /* Cream background from your logo */
-            color: #2D2926;            /* Deep charcoal text */
+            background-color: #F2EADC; /* Logo Cream */
+            color: #2D2926;            /* Logo Charcoal */
             font-family: 'Montserrat', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
 
         .container {
-            max-width: 450px;
-            width: 90%;
+            max-width: 500px;
+            width: 100%;
             text-align: center;
             padding: 40px;
             background: white;
             border-radius: 25px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            border: 1px solid #6B8E6B; /* Subtle green border */
+            border: 1px solid #6B8E6B; /* Botanical Green */
         }
 
-        .logo {
-            width: 200px; /* Adjusted for your Canva logo */
-            margin-bottom: 10px;
+        .logo { width: 180px; margin-bottom: 10px; }
+        h1 { font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 1.3rem; margin: 0; }
+        .subtitle { font-style: italic; color: #6B8E6B; margin-bottom: 25px; font-size: 0.85rem; }
+
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; text-transform: uppercase; color: #6B8E6B; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: #fafafa;
         }
 
-        h1 { 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            letter-spacing: 2px;
-            font-size: 1.5rem;
-            margin-top: 0;
-        }
-
-        .subtitle { 
-            font-style: italic; 
-            color: #6B8E6B; /* Botanical green */
-            margin-bottom: 30px;
-            font-size: 0.9rem;
-        }
+        input:focus { outline: none; border-color: #E88D43; }
 
         #affirmation-display {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             line-height: 1.6;
-            margin: 30px 0;
-            min-height: 80px;
+            margin: 25px 0;
             padding: 20px;
-            border-left: 3px solid #E88D43; /* Fire orange accent */
-            background-color: #fafafa;
-            border-radius: 0 10px 10px 0;
+            border-left: 4px solid #E88D43; /* Fire Orange */
+            background-color: #fdfdfd;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            border-radius: 0 15px 15px 0;
         }
 
+        .button-group { display: flex; gap: 10px; }
+
         button {
-            background-color: #E88D43; /* Fire orange from logo */
+            background-color: #E88D43;
             color: white;
             border: none;
-            padding: 16px 32px;
+            padding: 16px;
             border-radius: 50px;
             cursor: pointer;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.3s ease;
-            width: 100%;
+            flex: 2;
         }
 
-        button:hover {
-            background-color: #2D2926; /* Dark charcoal on hover */
-            transform: translateY(-2px);
+        button.secondary {
+            background-color: #eee;
+            color: #777;
+            flex: 1;
         }
+
+        button:hover { background-color: #2D2926; color: white; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <img src="Logo Canva.png" alt="Tisane Infusions Logo" class="logo">
+        <img src="logo-canva.png" alt="Tisane Infusions Logo" class="logo">
         
         <h1>Affirmation Agent</h1>
         <p class="subtitle">Embrace your mind, body, and spirit</p>
         
-        <div id="affirmation-display">
-            Tap the button to steep your daily affirmation.
+        <div class="input-group">
+            <label>What's on your mind?</label>
+            <input type="text" id="topic" placeholder="e.g. finding purpose, peace">
         </div>
 
-        <button onclick="getAffirmation()">Infuse Positivity</button>
+        <div class="input-group">
+            <label>Your Belief System?</label>
+            <input type="text" id="belief" placeholder="e.g. spiritual, growth">
+        </div>
+
+        <div class="button-group">
+            <button onclick="getAffirmation()">Infuse Affirmation</button>
+            <button class="secondary" onclick="resetFields()">Reset</button>
+        </div>
+
+        <div id="affirmation-display">
+            Your personalized infusion will appear here...
+        </div>
     </div>
 
     <script>
+        function resetFields() {
+            document.getElementById('topic').value = '';
+            document.getElementById('belief').value = '';
+            document.getElementById('affirmation-display').innerText = "Fields cleared. Ready for a new infusion.";
+        }
+
         async function getAffirmation() {
+            const topic = document.getElementById('topic').value;
+            const belief = document.getElementById('belief').value;
             const display = document.getElementById('affirmation-display');
-            display.innerText = "Steeping your affirmation...";
+
+            if(!topic || !belief) {
+                display.innerText = "Please fill in both windows to steep your affirmation.";
+                return;
+            }
+
+            display.innerText = "Steeping your unique infusion...";
 
             try {
-                // This targets the specific Netlify folder path you already have set up
                 const response = await fetch('/.netlify/functions/agent', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic: "inner peace", belief: "abundance" })
+                    body: JSON.stringify({ topic, belief })
                 });
                 
                 const data = await response.json();
                 display.innerText = data.affirmation;
             } catch (err) {
-                display.innerText = "Error: The infusion was interrupted. Please try again.";
-                console.error("Fetch Error:", err);
+                display.innerText = "The infusion was interrupted. Please try again.";
             }
         }
     </script>
