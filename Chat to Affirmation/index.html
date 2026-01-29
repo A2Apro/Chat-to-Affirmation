@@ -2,110 +2,116 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tisane Infusions - Affirmation Agent</title>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
 
+        /* Ensures the background stays cream and centers the app */
         body {
             background-color: #F2EADC;
             color: #2D2926;
             font-family: 'Montserrat', sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
         }
 
+        /* The white card container */
         .container {
-            max-width: 500px;
+            max-width: 450px;
             width: 100%;
-            text-align: center;
-            padding: 30px;
             background: white;
+            padding: 30px;
             border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
             border: 1px solid #6B8E6B;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            align-items: center; /* Keeps everything centered */
             box-sizing: border-box;
         }
 
         .logo { 
             width: 100%;
-            max-width: 200px; 
+            max-width: 220px;
             height: auto;
-            margin: 0 auto 10px auto;
-            display: block;
+            margin-bottom: 15px;
         }
 
         h1 { font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 1.2rem; margin: 0; }
-        .subtitle { font-style: italic; color: #6B8E6B; margin-bottom: 20px; font-size: 0.8rem; }
+        .subtitle { font-style: italic; color: #6B8E6B; margin-bottom: 25px; font-size: 0.8rem; }
 
-        .input-group { text-align: left; margin-bottom: 10px; }
-        label { display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 4px; color: #6B8E6B; }
+        .input-group { width: 100%; text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 5px; color: #6B8E6B; text-transform: uppercase; }
         
         input {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: 1px solid #ddd;
-            border-radius: 10px;
+            border-radius: 12px;
             font-family: 'Montserrat', sans-serif;
             font-size: 1rem;
             box-sizing: border-box;
+            background-color: #fafafa;
         }
 
         #affirmation-display {
-            font-size: 1rem;
-            line-height: 1.5;
-            margin: 15px 0;
+            width: 100%;
+            min-height: 60px;
+            margin: 20px 0;
             padding: 20px;
+            background: #fdfdfd;
             border-left: 4px solid #E88D43;
-            background-color: #fafafa;
-            min-height: 50px;
-            font-style: italic;
             border-radius: 0 15px 15px 0;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
-        .button-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .button-group { width: 100%; display: flex; gap: 10px; }
+        
         button {
-            background-color: #E88D43; 
+            flex: 2;
+            background-color: #E88D43;
             color: white;
             border: none;
-            padding: 14px;
+            padding: 16px;
             border-radius: 50px;
-            cursor: pointer;
             font-weight: 600;
             text-transform: uppercase;
-            flex: 2;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        button.secondary { background-color: #eee; color: #777; flex: 1; }
 
-        /* FIXED LINKEDIN SECTION */
+        button.secondary { flex: 1; background-color: #eee; color: #777; }
+        button:hover { background-color: #2D2926; color: white; }
+
+        /* THE FIXED CREDIT SECTION */
         .developer-credit {
-            margin-top: 20px;
+            margin-top: 30px; /* Pushes it to the bottom of the white box */
             font-size: 0.7rem;
             color: #6B8E6B;
             text-decoration: none;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            display: inline-block;
+            display: block;
+            text-align: center;
         }
-
-        .developer-credit:hover { color: #E88D43; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <img src="logo.png" alt="Tisane Infusions Logo" class="logo">
+        <img src="logo_nosize.svg" alt="Tisane Infusions Logo" class="logo">
         
         <h1>Affirmation Agent</h1>
         <p class="subtitle">Embrace your mind, body, and spirit</p>
@@ -158,4 +164,3 @@
     </script>
 </body>
 </html>
-
