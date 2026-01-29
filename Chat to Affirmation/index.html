@@ -9,8 +9,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
 
         body {
-            background-color: #F2EADC; /* Cream background from logo */
-            color: #2D2926;            /* Deep charcoal text */
+            background-color: #F2EADC; /* Logo Cream */
+            color: #2D2926;            /* Logo Charcoal */
             font-family: 'Montserrat', sans-serif;
             display: flex;
             align-items: center;
@@ -28,7 +28,8 @@
             background: white;
             border-radius: 25px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            border: 1px solid #6B8E6B; /* Botanical green border */
+            border: 1px solid #6B8E6B; /* Botanical Green */
+            position: relative; /* Helps contain elements on mobile */
         }
 
         .logo { 
@@ -51,7 +52,6 @@
             font-size: 0.85rem; 
         }
 
-        /* Input Windows styling */
         .input-group { 
             text-align: left; 
             margin-bottom: 15px; 
@@ -87,7 +87,7 @@
             line-height: 1.6;
             margin: 25px 0;
             padding: 20px;
-            border-left: 4px solid #E88D43; /* Fire orange accent */
+            border-left: 4px solid #E88D43; /* Fire Orange */
             background-color: #fdfdfd;
             min-height: 60px;
             display: flex;
@@ -103,7 +103,7 @@
         }
 
         button {
-            background-color: #E88D43; /* Fire orange from logo */
+            background-color: #E88D43; 
             color: white;
             border: none;
             padding: 16px;
@@ -127,33 +127,31 @@
             color: white; 
         }
 
-        /* LinkedIn Credit styling */
+        /* DEVELOPER CREDIT STYLING */
         .developer-credit {
             position: fixed;
             bottom: 20px;
             right: 20px;
             font-size: 0.7rem;
-            color: #6B8E6B;
+            color: #E88D43; /* Fire Orange for visibility */
             text-decoration: none;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: color 0.3s ease;
+            z-index: 1000;
         }
 
-        .developer-credit:hover {
-            color: #E88D43;
-        }
-
-        /* Mobile adjustment for credit */
+        /* THE MOBILE FIX */
         @media (max-width: 600px) {
             .developer-credit {
-                position: relative;
+                position: relative; /* Brings it back inside the white container */
                 display: block;
-                margin-top: 20px;
+                margin: 20px auto 0 auto;
                 text-align: center;
-                right: 0;
-                bottom: 0;
+                right: auto;
+                bottom: auto;
+                color: #6B8E6B; /* Back to Green for mobile subtleness */
             }
         }
     </style>
@@ -161,7 +159,7 @@
 <body>
 
     <div class="container">
-        <img src="logo.png" alt="Tisane Infusions Logo" class="logo">
+        <img src="logo_nosize.svg" alt="Tisane Infusions Logo" class="logo">
         
         <h1>Affirmation Agent</h1>
         <p class="subtitle">Embrace your mind, body, and spirit</p>
@@ -184,11 +182,11 @@
         <div id="affirmation-display">
             Your personalized infusion will appear here...
         </div>
-    </div>
 
-    <a href="https://www.linkedin.com/in/christopher-medina-b49a3a258" target="_blank" class="developer-credit">
-        Developed by Christopher Medina
-    </a>
+        <a href="https://www.linkedin.com/in/christopher-medina-b49a3a258" target="_blank" class="developer-credit">
+            Developed by Christopher Medina
+        </a>
+    </div>
 
     <script>
         function resetFields() {
@@ -224,5 +222,4 @@
         }
     </script>
 </body>
-
 </html>
