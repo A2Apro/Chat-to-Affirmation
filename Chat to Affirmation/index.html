@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tisane Infusions - Affirmation Agent</title>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
 
         body {
-            background-color: #F2EADC; /* Logo Cream */
-            color: #2D2926;            /* Logo Charcoal */
+            background-color: #F2EADC; /* Cream background from logo */
+            color: #2D2926;            /* Deep charcoal text */
             font-family: 'Montserrat', sans-serif;
             display: flex;
             align-items: center;
@@ -27,15 +28,43 @@
             background: white;
             border-radius: 25px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            border: 1px solid #6B8E6B; /* Botanical Green */
+            border: 1px solid #6B8E6B; /* Botanical green border */
         }
 
-        .logo { width: 180px; margin-bottom: 10px; }
-        h1 { font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 1.3rem; margin: 0; }
-        .subtitle { font-style: italic; color: #6B8E6B; margin-bottom: 25px; font-size: 0.85rem; }
+        .logo { 
+            width: 220px; 
+            margin-bottom: 10px; 
+        }
 
-        .input-group { text-align: left; margin-bottom: 15px; }
-        label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; text-transform: uppercase; color: #6B8E6B; }
+        h1 { 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-size: 1.3rem; 
+            margin: 0; 
+        }
+
+        .subtitle { 
+            font-style: italic; 
+            color: #6B8E6B; 
+            margin-bottom: 25px; 
+            font-size: 0.85rem; 
+        }
+
+        /* Input Windows styling */
+        .input-group { 
+            text-align: left; 
+            margin-bottom: 15px; 
+        }
+
+        label { 
+            display: block; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            margin-bottom: 5px; 
+            text-transform: uppercase; 
+            color: #6B8E6B; 
+        }
         
         input {
             width: 100%;
@@ -48,14 +77,17 @@
             background-color: #fafafa;
         }
 
-        input:focus { outline: none; border-color: #E88D43; }
+        input:focus { 
+            outline: none; 
+            border-color: #E88D43; 
+        }
 
         #affirmation-display {
             font-size: 1.1rem;
             line-height: 1.6;
             margin: 25px 0;
             padding: 20px;
-            border-left: 4px solid #E88D43; /* Fire Orange */
+            border-left: 4px solid #E88D43; /* Fire orange accent */
             background-color: #fdfdfd;
             min-height: 60px;
             display: flex;
@@ -65,10 +97,13 @@
             border-radius: 0 15px 15px 0;
         }
 
-        .button-group { display: flex; gap: 10px; }
+        .button-group { 
+            display: flex; 
+            gap: 10px; 
+        }
 
         button {
-            background-color: #E88D43;
+            background-color: #E88D43; /* Fire orange from logo */
             color: white;
             border: none;
             padding: 16px;
@@ -87,13 +122,46 @@
             flex: 1;
         }
 
-        button:hover { background-color: #2D2926; color: white; }
+        button:hover { 
+            background-color: #2D2926; 
+            color: white; 
+        }
+
+        /* LinkedIn Credit styling */
+        .developer-credit {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.7rem;
+            color: #6B8E6B;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        .developer-credit:hover {
+            color: #E88D43;
+        }
+
+        /* Mobile adjustment for credit */
+        @media (max-width: 600px) {
+            .developer-credit {
+                position: relative;
+                display: block;
+                margin-top: 20px;
+                text-align: center;
+                right: 0;
+                bottom: 0;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <img src="logo.png" alt="Tisane Infusions Logo" class="logo">
+        <img src="logo_nosize.svg" alt="Tisane Infusions Logo" class="logo">
         
         <h1>Affirmation Agent</h1>
         <p class="subtitle">Embrace your mind, body, and spirit</p>
@@ -117,6 +185,10 @@
             Your personalized infusion will appear here...
         </div>
     </div>
+
+    <a href="https://www.linkedin.com/in/christopher-medina-b49a3a258" target="_blank" class="developer-credit">
+        Developed by Christopher Medina
+    </a>
 
     <script>
         function resetFields() {
