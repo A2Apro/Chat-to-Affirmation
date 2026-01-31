@@ -7,3 +7,6 @@
   # This tells Netlify where your 'agent.js' lives
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  
+  # NEW LINE BELOW: This forces Netlify to pack the prompt file
+  included_files = ["prompt.md"]
