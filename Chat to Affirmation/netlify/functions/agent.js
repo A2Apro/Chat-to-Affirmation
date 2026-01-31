@@ -14,15 +14,22 @@ exports.handler = async (event) => {
   return new Promise((resolve) => {
     try {
       const body = JSON.parse(event.body);
+      
+      // --- THE SAFETY NET LOGIC ---
+      let systemInstructions = "You are a helpful affirmation assistant."; // Default
+      
+      try {
+        // Look for the prompt.md file in the root folder
+        const promptPath = path.resolve(__dirname, '../../prompt.md');
+        if (fs.existsSync(promptPath)) {
+          systemInstructions = fs.readFileSync(promptPath, 'utf8');
+        }
+      } catch (fileError) {
+        console.log("Could not read prompt.md, using default personality.");
+      }
+      // ----------------------------
 
-      // --- NEW LOGIC: READ FROM PROMPT.MD ---
-      // This looks for prompt.md in your main folder
-      const promptPath = path.resolve(__dirname, '../../prompt.md');
-      const systemInstructions = fs.readFileSync(promptPath, 'utf8');
-      // --------------------------------------
-
-      // We combine the file instructions with the user's specific topic
-      const fullPrompt = `${systemInstructions}. Now, write a short, warm affirmation about ${body.topic} and their belief in ${body.belief}.`;
+      const fullPrompt = `Instructions: ${systemInstructions}. User Topic: ${body.topic}. User Beliefs: ${body.belief}. Write a 2-sentence affirmation.`;
       
       const data = JSON.stringify({
         contents: [{ parts: [{ text: fullPrompt }] }]
@@ -30,7 +37,6 @@ exports.handler = async (event) => {
 
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        // Keeping your Gemini 3 Flash model path exactly as you have it
         path: `/v1beta/models/gemini-3-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
@@ -43,23 +49,21 @@ exports.handler = async (event) => {
         let responseBody = '';
         res.on('data', (chunk) => { responseBody += chunk; });
         res.on('end', () => {
-          const parsed = JSON.parse(responseBody);
-          // Safety check: ensure the AI returned a response
-          if (parsed.candidates && parsed.candidates[0]) {
-            const text = parsed.candidates[0].content.parts[0].text;
+          try {
+            const parsed = JSON.parse(responseBody);
+            // This line specifically fixes the "undefined" error
+            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "The AI is currently steeping. Try again in a moment!";
             resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: text }) });
-          } else {
-            resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "AI response failed" }) });
+          } catch (e) {
+            resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parsing error" }) });
           }
         });
       });
 
-      req.on('error', (e) => {
-        resolve({ statusCode: 500, headers, body: JSON.stringify({ error: e.message }) });
-      });
-
+      req.on('error', (e) => resolve({ statusCode: 500, headers, body: JSON.stringify({ error: e.message }) }));
       req.write(data);
       req.end();
+
     } catch (e) {
       resolve({ statusCode: 500, headers, body: JSON.stringify({ error: e.message }) });
     }
