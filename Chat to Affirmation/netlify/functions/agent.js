@@ -15,17 +15,24 @@ exports.handler = async (event) => {
     try {
       const body = JSON.parse(event.body);
       
-      // --- THE SAFETY NET LOGIC ---
+      // --- BULLETPROOF PATHING ---
       let systemInstructions = "You are a helpful affirmation assistant."; // Default
       
       try {
-        // Look for the prompt.md file in the root folder
-        const promptPath = path.resolve(__dirname, '../../prompt.md');
+        // process.cwd() starts looking at the main folder of your GitHub repo
+        const promptPath = path.join(process.cwd(), 'prompt.md');
+        
         if (fs.existsSync(promptPath)) {
           systemInstructions = fs.readFileSync(promptPath, 'utf8');
+        } else {
+          // Backup check: look one level up if the first one fails
+          const altPath = path.resolve(__dirname, '../../prompt.md');
+          if (fs.existsSync(altPath)) {
+            systemInstructions = fs.readFileSync(altPath, 'utf8');
+          }
         }
       } catch (fileError) {
-        console.log("Could not read prompt.md, using default personality.");
+        console.log("File error, using default.");
       }
       // ----------------------------
 
@@ -51,7 +58,7 @@ exports.handler = async (event) => {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
-            // This line specifically fixes the "undefined" error
+            // This ensures we show the AI text OR the fallback message
             const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "The AI is currently steeping. Try again in a moment!";
             resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: text }) });
           } catch (e) {
