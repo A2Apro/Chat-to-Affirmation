@@ -15,32 +15,24 @@ exports.handler = async (event) => {
     try {
       const body = JSON.parse(event.body);
       
-      // --- UPDATED: DEEP SEARCH BUNDLE LOGIC ---
+      // --- THE PHYSICAL DISK SEARCH ---
       let systemInstructions = "You are a helpful affirmation assistant.";
       
       try {
-        // Attempt 1: The most reliable for Netlify 'included_files'
-        const bundledPath = require.resolve('../../prompt.md');
-        systemInstructions = fs.readFileSync(bundledPath, 'utf8');
-      } catch (e1) {
-        try {
-          // Attempt 2: Check the root directory directly
+        // This is the "Gold Standard" for finding bundled files on Netlify/AWS
+        const absolutePath = path.join(process.env.LAMBDA_TASK_ROOT, 'prompt.md');
+        
+        if (fs.existsSync(absolutePath)) {
+          systemInstructions = fs.readFileSync(absolutePath, 'utf8');
+        } else {
+          // Fallback 1: Current Working Directory
           const rootPath = path.join(process.cwd(), 'prompt.md');
           if (fs.existsSync(rootPath)) {
             systemInstructions = fs.readFileSync(rootPath, 'utf8');
           }
-        } catch (e2) {
-          try {
-            // Attempt 3: Check a relative path from the function folder
-            const manualPath = path.resolve(__dirname, '../../prompt.md');
-            if (fs.existsSync(manualPath)) {
-              systemInstructions = fs.readFileSync(manualPath, 'utf8');
-            }
-          } catch (e3) {
-            // If all fail, we stay with the default
-            console.log("Minion file not found. Using default assistant.");
-          }
         }
+      } catch (fileError) {
+        console.log("File read error, using default.");
       }
       // ------------------------------------
 
@@ -66,13 +58,8 @@ exports.handler = async (event) => {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
-            if (parsed.candidates && parsed.candidates[0]?.content?.parts?.[0]?.text) {
-              const text = parsed.candidates[0].content.parts[0].text;
-              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: text }) });
-            } else {
-              // This is the message you saw; it triggers if Gemini doesn't return text
-              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "The AI is currently steeping. Try again in a moment!" }) });
-            }
+            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "The AI is currently steeping. Try again in a moment!";
+            resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: text }) });
           } catch (e) {
             resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parsing error" }) });
           }
