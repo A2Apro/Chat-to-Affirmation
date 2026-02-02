@@ -1,8 +1,12 @@
 {
   "name": "ai-agent",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "commonjs",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0"
+    "@google/generative-ai": "^0.21.0",
+    "path": "^0.12.7"
   }
 }
