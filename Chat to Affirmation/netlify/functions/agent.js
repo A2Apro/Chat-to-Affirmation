@@ -1,19 +1,17 @@
 const https = require('https');
 
-// --- 1. SAFE LOAD THE MINION ---
-let systemInstructions = "You are a helpful assistant.";
-let debugLog = []; // We will collect clues here
+// --- THE SIDECAR LOADER ---
+// We use './' which means "look in the same folder as me"
+// This is the most reliable way to link files in Node.js
+let systemInstructions = "You are a helpful affirmation assistant.";
 
 try {
-  // Try to load the file
-  systemInstructions = require('../../prompt.js');
-  debugLog.push("Loaded prompt.js successfully.");
+  systemInstructions = require('./prompt.js');
 } catch (e) {
-  debugLog.push("Failed to load prompt.js: " + e.message);
-  // Fallback to avoid crash
-  systemInstructions = "You are a helpful assistant (Fallback active).";
+  // If this fails, we force the error to show so you don't waste credits guessing
+  systemInstructions = `CRITICAL ERROR: Could not find prompt.js in functions folder. Details: ${e.message}`;
 }
-// -------------------------------
+// ---------------------------
 
 exports.handler = async (event) => {
   const headers = {
@@ -26,13 +24,13 @@ exports.handler = async (event) => {
 
   return new Promise((resolve) => {
     try {
-      // 2. PARSE BODY
-      let body;
-      try {
-        body = JSON.parse(event.body);
-      } catch (e) {
-        throw new Error("Invalid JSON body sent from frontend.");
+      // 1. Check for Critical Load Error immediately
+      if (systemInstructions.includes("CRITICAL ERROR")) {
+        resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: systemInstructions }) });
+        return;
       }
+
+      const body = JSON.parse(event.body);
 
       const fullPrompt = `Instructions: ${systemInstructions}. User Topic: ${body.topic}. User Beliefs: ${body.belief}. Write a 2-sentence affirmation.`;
       
@@ -42,8 +40,8 @@ exports.handler = async (event) => {
 
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        // USING THE PREVIEW MODEL
-        path: `/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        // Using the Preview model since we know it works for you
+        path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,55 +55,25 @@ exports.handler = async (event) => {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
-            
-            // 3. SUCCESS CHECK
             if (parsed.candidates && parsed.candidates[0]?.content?.parts?.[0]?.text) {
-              resolve({ 
-                statusCode: 200, 
-                headers, 
-                body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) 
-              });
+              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) });
             } else {
-              // 4. API ERROR CATCHER
-              // If Google returns an error, we show THAT as the affirmation
+              // If API fails, show the raw error to save debugging time
               const apiError = parsed.error ? parsed.error.message : "Unknown API Error";
-              const debugMessage = `API FAILURE: ${apiError}. LOGS: ${debugLog.join(" | ")}`;
-              
-              resolve({ 
-                statusCode: 200, 
-                headers, 
-                body: JSON.stringify({ affirmation: debugMessage }) 
-              });
+              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: `API ERROR: ${apiError}` }) });
             }
           } catch (e) {
-            resolve({ 
-              statusCode: 200, 
-              headers, 
-              body: JSON.stringify({ affirmation: "RESPONSE PARSE CRASH: " + responseBody }) 
-            });
+            resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "JSON PARSE ERROR" }) });
           }
         });
       });
 
-      req.on('error', (e) => {
-        resolve({ 
-          statusCode: 200, 
-          headers, 
-          body: JSON.stringify({ affirmation: "NETWORK CRASH: " + e.message }) 
-        });
-      });
-
+      req.on('error', (e) => resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "NETWORK ERROR: " + e.message }) }));
       req.write(data);
       req.end();
 
     } catch (e) {
-      // 5. GLOBAL CRASH CATCHER
-      // This catches the 'undefined' cause and prints it
-      resolve({ 
-        statusCode: 200, 
-        headers, 
-        body: JSON.stringify({ affirmation: "SYSTEM CRASH: " + e.message }) 
-      });
+      resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "CRASH: " + e.message }) });
     }
   });
 };
