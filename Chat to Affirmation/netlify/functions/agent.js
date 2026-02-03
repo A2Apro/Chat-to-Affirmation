@@ -1,13 +1,15 @@
 const https = require('https');
 
-// --- THE TROJAN HORSE ---
-// We use require() because Netlify ALWAYS bundles .js files correctly.
-let systemInstructions = "You are a helpful affirmation assistant.";
+// --- THE DEBUG LOADER ---
+let systemInstructions = "";
+
 try {
-  // logic: look 2 levels up from netlify/functions to find prompt.js
+  // We try to load the prompt file
   systemInstructions = require('../../prompt.js');
 } catch (e) {
-  console.log("Could not load prompt.js, using default.");
+  // IF THIS FAILS, WE WILL PRINT THE ERROR AS THE AFFIRMATION
+  // This way, you will see exactly what is wrong on your screen.
+  systemInstructions = `CRITICAL ERROR: Could not read prompt.js. Reason: ${e.message}`;
 }
 // ------------------------
 
@@ -24,6 +26,16 @@ exports.handler = async (event) => {
     try {
       const body = JSON.parse(event.body);
 
+      // If the file failed to load, we skip the AI and just show the error
+      if (systemInstructions.includes("CRITICAL ERROR")) {
+         resolve({ 
+           statusCode: 200, 
+           headers, 
+           body: JSON.stringify({ affirmation: systemInstructions }) 
+         });
+         return;
+      }
+
       const fullPrompt = `Instructions: ${systemInstructions}. User Topic: ${body.topic}. User Beliefs: ${body.belief}. Write a 2-sentence affirmation.`;
       
       const data = JSON.stringify({
@@ -32,7 +44,7 @@ exports.handler = async (event) => {
 
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        // RESTORED: The "-preview" suffix you used before!
+        // Keeping the Preview model that we know works for you
         path: `/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
@@ -47,22 +59,10 @@ exports.handler = async (event) => {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
-            
-            // Check if the API gave us text
             if (parsed.candidates && parsed.candidates[0]?.content?.parts?.[0]?.text) {
-              resolve({ 
-                statusCode: 200, 
-                headers, 
-                body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) 
-              });
+              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) });
             } else {
-              // DEBUG: If it fails, this will now log the REAL error in your Netlify logs
-              console.log("API Error Details:", JSON.stringify(parsed));
-              resolve({ 
-                statusCode: 200, 
-                headers, 
-                body: JSON.stringify({ affirmation: "The AI is currently steeping. Try again in a moment!" }) 
-              });
+              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "The AI is currently steeping. Try again!" }) });
             }
           } catch (e) {
             resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parsing error" }) });
