@@ -41,7 +41,7 @@ exports.handler = async (event) => {
       const options = {
         hostname: 'generativelanguage.googleapis.com',
         // Using the Preview model since we know it works for you
-        path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        path: `/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,3 +77,4 @@ exports.handler = async (event) => {
     }
   });
 };
+
