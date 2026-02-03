@@ -1,11 +1,10 @@
 const https = require('https');
 
 // --- THE TROJAN HORSE ---
-// Because prompt.js is code, Netlify is forced to bundle it.
-// We use a try/catch just in case, but this is 99% more reliable.
+// We use require() because Netlify ALWAYS bundles .js files correctly.
 let systemInstructions = "You are a helpful affirmation assistant.";
 try {
-  // We look two levels up because agent.js is in netlify/functions
+  // logic: look 2 levels up from netlify/functions to find prompt.js
   systemInstructions = require('../../prompt.js');
 } catch (e) {
   console.log("Could not load prompt.js, using default.");
@@ -33,7 +32,8 @@ exports.handler = async (event) => {
 
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        path: `/v1beta/models/gemini-3-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        // RESTORED: The "-preview" suffix you used before!
+        path: `/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,8 +47,23 @@ exports.handler = async (event) => {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
-            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "The AI is currently steeping. Try again in a moment!";
-            resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: text }) });
+            
+            // Check if the API gave us text
+            if (parsed.candidates && parsed.candidates[0]?.content?.parts?.[0]?.text) {
+              resolve({ 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) 
+              });
+            } else {
+              // DEBUG: If it fails, this will now log the REAL error in your Netlify logs
+              console.log("API Error Details:", JSON.stringify(parsed));
+              resolve({ 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ affirmation: "The AI is currently steeping. Try again in a moment!" }) 
+              });
+            }
           } catch (e) {
             resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parsing error" }) });
           }
