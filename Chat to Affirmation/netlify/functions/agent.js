@@ -1,6 +1,16 @@
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
+
+// --- THE TROJAN HORSE ---
+// Because prompt.js is code, Netlify is forced to bundle it.
+// We use a try/catch just in case, but this is 99% more reliable.
+let systemInstructions = "You are a helpful affirmation assistant.";
+try {
+  // We look two levels up because agent.js is in netlify/functions
+  systemInstructions = require('../../prompt.js');
+} catch (e) {
+  console.log("Could not load prompt.js, using default.");
+}
+// ------------------------
 
 exports.handler = async (event) => {
   const headers = {
@@ -14,27 +24,6 @@ exports.handler = async (event) => {
   return new Promise((resolve) => {
     try {
       const body = JSON.parse(event.body);
-      
-      // --- THE PHYSICAL DISK SEARCH ---
-      let systemInstructions = "You are a helpful affirmation assistant.";
-      
-      try {
-        // This is the "Gold Standard" for finding bundled files on Netlify/AWS
-        const absolutePath = path.join(process.env.LAMBDA_TASK_ROOT, 'prompt.md');
-        
-        if (fs.existsSync(absolutePath)) {
-          systemInstructions = fs.readFileSync(absolutePath, 'utf8');
-        } else {
-          // Fallback 1: Current Working Directory
-          const rootPath = path.join(process.cwd(), 'prompt.md');
-          if (fs.existsSync(rootPath)) {
-            systemInstructions = fs.readFileSync(rootPath, 'utf8');
-          }
-        }
-      } catch (fileError) {
-        console.log("File read error, using default.");
-      }
-      // ------------------------------------
 
       const fullPrompt = `Instructions: ${systemInstructions}. User Topic: ${body.topic}. User Beliefs: ${body.belief}. Write a 2-sentence affirmation.`;
       
