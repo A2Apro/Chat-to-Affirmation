@@ -1,17 +1,19 @@
 const https = require('https');
 
-// --- THE DEBUG LOADER ---
-let systemInstructions = "";
+// --- 1. SAFE LOAD THE MINION ---
+let systemInstructions = "You are a helpful assistant.";
+let debugLog = []; // We will collect clues here
 
 try {
-  // We try to load the prompt file
+  // Try to load the file
   systemInstructions = require('../../prompt.js');
+  debugLog.push("Loaded prompt.js successfully.");
 } catch (e) {
-  // IF THIS FAILS, WE WILL PRINT THE ERROR AS THE AFFIRMATION
-  // This way, you will see exactly what is wrong on your screen.
-  systemInstructions = `CRITICAL ERROR: Could not read prompt.js. Reason: ${e.message}`;
+  debugLog.push("Failed to load prompt.js: " + e.message);
+  // Fallback to avoid crash
+  systemInstructions = "You are a helpful assistant (Fallback active).";
 }
-// ------------------------
+// -------------------------------
 
 exports.handler = async (event) => {
   const headers = {
@@ -24,16 +26,12 @@ exports.handler = async (event) => {
 
   return new Promise((resolve) => {
     try {
-      const body = JSON.parse(event.body);
-
-      // If the file failed to load, we skip the AI and just show the error
-      if (systemInstructions.includes("CRITICAL ERROR")) {
-         resolve({ 
-           statusCode: 200, 
-           headers, 
-           body: JSON.stringify({ affirmation: systemInstructions }) 
-         });
-         return;
+      // 2. PARSE BODY
+      let body;
+      try {
+        body = JSON.parse(event.body);
+      } catch (e) {
+        throw new Error("Invalid JSON body sent from frontend.");
       }
 
       const fullPrompt = `Instructions: ${systemInstructions}. User Topic: ${body.topic}. User Beliefs: ${body.belief}. Write a 2-sentence affirmation.`;
@@ -44,7 +42,7 @@ exports.handler = async (event) => {
 
       const options = {
         hostname: 'generativelanguage.googleapis.com',
-        // Keeping the Preview model that we know works for you
+        // USING THE PREVIEW MODEL
         path: `/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
         method: 'POST',
         headers: {
@@ -59,23 +57,55 @@ exports.handler = async (event) => {
         res.on('end', () => {
           try {
             const parsed = JSON.parse(responseBody);
+            
+            // 3. SUCCESS CHECK
             if (parsed.candidates && parsed.candidates[0]?.content?.parts?.[0]?.text) {
-              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) });
+              resolve({ 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ affirmation: parsed.candidates[0].content.parts[0].text }) 
+              });
             } else {
-              resolve({ statusCode: 200, headers, body: JSON.stringify({ affirmation: "The AI is currently steeping. Try again!" }) });
+              // 4. API ERROR CATCHER
+              // If Google returns an error, we show THAT as the affirmation
+              const apiError = parsed.error ? parsed.error.message : "Unknown API Error";
+              const debugMessage = `API FAILURE: ${apiError}. LOGS: ${debugLog.join(" | ")}`;
+              
+              resolve({ 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ affirmation: debugMessage }) 
+              });
             }
           } catch (e) {
-            resolve({ statusCode: 500, headers, body: JSON.stringify({ error: "Parsing error" }) });
+            resolve({ 
+              statusCode: 200, 
+              headers, 
+              body: JSON.stringify({ affirmation: "RESPONSE PARSE CRASH: " + responseBody }) 
+            });
           }
         });
       });
 
-      req.on('error', (e) => resolve({ statusCode: 500, headers, body: JSON.stringify({ error: e.message }) }));
+      req.on('error', (e) => {
+        resolve({ 
+          statusCode: 200, 
+          headers, 
+          body: JSON.stringify({ affirmation: "NETWORK CRASH: " + e.message }) 
+        });
+      });
+
       req.write(data);
       req.end();
 
     } catch (e) {
-      resolve({ statusCode: 500, headers, body: JSON.stringify({ error: e.message }) });
+      // 5. GLOBAL CRASH CATCHER
+      // This catches the 'undefined' cause and prints it
+      resolve({ 
+        statusCode: 200, 
+        headers, 
+        body: JSON.stringify({ affirmation: "SYSTEM CRASH: " + e.message }) 
+      });
     }
   });
 };
