@@ -3,30 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Letter Blender</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Tisane Infusions - Affirmation Agent</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap');
+
+        body {
+            background-color: #F2EADC;
+            color: #2D2926;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border: 1px solid #6B8E6B;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        .logo { 
+            width: 100%;
+            max-width: 200px; 
+            height: auto;
+            margin: 0 auto 10px auto;
+            display: block;
+        }
+
+        h1 { font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 1.2rem; margin: 0; }
+        .subtitle { font-style: italic; color: #6B8E6B; margin-bottom: 20px; font-size: 0.8rem; }
+
+        .input-group { text-align: left; margin-bottom: 10px; }
+        label { display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 4px; color: #6B8E6B; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        #affirmation-display {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 15px 0;
+            padding: 20px;
+            border-left: 4px solid #E88D43;
+            background-color: #fafafa;
+            min-height: 50px;
+            font-style: italic;
+            border-radius: 0 15px 15px 0;
+        }
+
+        .button-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        button {
+            background-color: #E88D43; 
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            flex: 2;
+        }
+        button.secondary { background-color: #eee; color: #777; flex: 1; }
+
+        /* FIXED LINKEDIN SECTION */
+        .developer-credit {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: #6B8E6B;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+        }
+
+        .developer-credit:hover { color: #E88D43; }
+    </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div class="stats">
-            <p>Points: <span id="score">0</span></p>
-            <p>Tier: <span id="tier-level">1</span></p>
-        </div>
-
-        <div id="display-area">
-            <h1 id="word-display">_ _</h1>
-        </div>
-
-        <button id="blend-button">I Got It! (Next Word)</button>
+    <div class="container">
+        <img src="logo.png" alt="Tisane Infusions Logo" class="logo">
         
-        <button id="try-again-button" style="background-color: #f44336; margin-top: 10px;">Try Again</button>
+        <h1>Affirmation Agent</h1>
+        <p class="subtitle">Embrace your mind, body, and spirit</p>
+        
+        <div class="input-group">
+            <label>What's on your mind?</label>
+            <input type="text" id="topic" placeholder="e.g. peace, purpose">
+        </div>
 
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <div class="input-group">
+            <label>Your Belief System?</label>
+            <input type="text" id="belief" placeholder="e.g. spiritual, growth">
+        </div>
 
-        <button id="reset-tier-button" style="background-color: #757575; font-size: 0.8rem; padding: 10px;">Restart This Tier</button>
+        <div class="button-group">
+            <button onclick="getAffirmation()">Infuse Affirmation</button>
+            <button class="secondary" onclick="resetFields()">Reset</button>
+        </div>
+
+        <div id="affirmation-display">Your infusion will appear here...</div>
+
+        <a href="https://www.linkedin.com/in/christopher-medina-b49a3a258" target="_blank" class="developer-credit">
+            Developed by Christopher Medina
+        </a>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        function resetFields() {
+            document.getElementById('topic').value = '';
+            document.getElementById('belief').value = '';
+            document.getElementById('affirmation-display').innerText = "Ready for a new infusion.";
+        }
+
+        async function getAffirmation() {
+            const topic = document.getElementById('topic').value;
+            const belief = document.getElementById('belief').value;
+            const display = document.getElementById('affirmation-display');
+            if(!topic || !belief) { display.innerText = "Please fill both windows."; return; }
+            display.innerText = "Steeping...";
+            try {
+                const response = await fetch('/.netlify/functions/agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, belief })
+                });
+                const data = await response.json();
+                display.innerText = data.affirmation;
+            } catch (err) { display.innerText = "Error. Please try again."; }
+        }
+    </script>
 </body>
 </html>
